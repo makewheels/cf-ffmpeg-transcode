@@ -60,7 +60,7 @@ public class TranscodeHandler {
 
         videoId = body.getString("videoId");
         transcodeFolder = new File(workDir, videoId);
-        inputFile = new File(transcodeFolder, inputKey.substring(inputKey.lastIndexOf("/") + 1));
+        inputFile = new File(transcodeFolder, FileNameUtil.getName(inputKey));
         outputFolder = new File(transcodeFolder, "out");
         m3u8File = new File(outputFolder, "index.m3u8");
     }
