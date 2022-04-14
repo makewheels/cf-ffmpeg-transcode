@@ -165,7 +165,7 @@ public class TranscodeHandler {
         }).start();
         Context context = (Context) contextObject;
         String str = "我是云函数，我收到任务了，requestId = " + context.getRequestId();
-        IoUtil.writeUtf8(response.getOutputStream(), true, str);
+        IoUtil.writeUtf8(response.getOutputStream(), false, str);
     }
 
 }
