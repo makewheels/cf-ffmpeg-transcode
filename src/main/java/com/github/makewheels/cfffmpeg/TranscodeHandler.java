@@ -131,7 +131,7 @@ public class TranscodeHandler {
     }
 
     private void deleteAllFiles() {
-        System.out.println("删除所有文件");
+        System.out.println("删除所有文件" + transcodeFolder.getAbsolutePath());
         FileUtil.del(transcodeFolder);
     }
 
@@ -157,17 +157,17 @@ public class TranscodeHandler {
                       Object contextObject) throws IOException {
         //创建子线程执行，先给前端返回结果
 //        Thread thread = new Thread(() -> {
-            try {
-                prepareArgs(provider, request, response, contextObject);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            prepareFFmpeg();
-            prepareInputFile();
-            transcodeM3u8();
-            uploadFiles();
-            deleteAllFiles();
-            callback();
+        try {
+            prepareArgs(provider, request, response, contextObject);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        prepareFFmpeg();
+        prepareInputFile();
+        transcodeM3u8();
+        uploadFiles();
+        deleteAllFiles();
+        callback();
 //        });
 //        thread.start();
         Context context = (Context) contextObject;
