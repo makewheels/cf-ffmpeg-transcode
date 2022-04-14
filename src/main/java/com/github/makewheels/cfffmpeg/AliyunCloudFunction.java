@@ -20,7 +20,7 @@ public class AliyunCloudFunction implements HttpRequestHandler {
     @Override
     public void handleRequest(HttpServletRequest request, HttpServletResponse response, Context context)
             throws IOException {
-//        transcodeHandler.start();
+        transcodeHandler.start();
         String body = IoUtil.readUtf8(request.getInputStream());
         System.out.println(body);
 
