@@ -63,7 +63,7 @@ public class TranscodeHandler {
         outputFolder = new File(transcodeFolder, "out");
         m3u8File = new File(outputFolder, "index.m3u8");
 
-        FileUtil.mkParentDirs(inputFile);
+        FileUtil.mkdir(transcodeFolder);
         FileUtil.mkdir(outputFolder);
     }
 
@@ -93,6 +93,20 @@ public class TranscodeHandler {
     }
 
     /**
+     * 执行转码
+     */
+    private void transcodeM3u8() {
+
+    }
+
+    /**
+     * 上传转码结果到对象存储
+     */
+    private void uploadFiles() {
+
+    }
+
+    /**
      * 从这里开始
      *
      * @param provider
@@ -106,7 +120,9 @@ public class TranscodeHandler {
         prepareArgs(provider, request, response, contextObject);
         prepareFFmpeg();
         prepareInputFile();
-
+        transcodeM3u8();
+        uploadFiles();
     }
+
 
 }
