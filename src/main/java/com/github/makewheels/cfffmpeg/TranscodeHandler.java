@@ -156,7 +156,7 @@ public class TranscodeHandler {
     public void start(String provider, HttpServletRequest request, HttpServletResponse response,
                       Object contextObject) throws IOException {
         //创建子线程执行，先给前端返回结果
-        Thread thread = new Thread(() -> {
+//        Thread thread = new Thread(() -> {
             try {
                 prepareArgs(provider, request, response, contextObject);
             } catch (IOException e) {
@@ -168,8 +168,8 @@ public class TranscodeHandler {
             uploadFiles();
             deleteAllFiles();
             callback();
-        });
-        thread.start();
+//        });
+//        thread.start();
         Context context = (Context) contextObject;
         String str = "我是云函数，我收到任务了，requestId = " + context.getRequestId();
         IoUtil.writeUtf8(response.getOutputStream(), true, str);
