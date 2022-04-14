@@ -113,6 +113,7 @@ public class TranscodeHandler {
                 "-vbsf h264_mp4toannexb -flags +global_header -map 0 -f segment -segment_list " +
                 outputFolder.getAbsolutePath() + "/index.m3u8 -segment_time 1 " + outputFolder.getAbsolutePath()
                 + "/%04d.ts";
+        System.out.println(cmd);
         executeAndPrint(cmd);
     }
 
@@ -120,7 +121,6 @@ public class TranscodeHandler {
      * 上传转码结果到对象存储
      */
     private void uploadFiles() {
-
     }
 
     /**
