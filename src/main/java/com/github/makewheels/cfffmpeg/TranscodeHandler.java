@@ -6,13 +6,16 @@ import cn.hutool.core.io.file.FileNameUtil;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.aliyun.fc.runtime.Context;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.GetObjectRequest;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.util.List;
 
 public class TranscodeHandler {
     private File workDir = new File(System.getenv("work_dir"));
@@ -35,6 +38,7 @@ public class TranscodeHandler {
     private String accessKeySecret;
 
     private OSS ossClient;
+    private String missionId;
 
     private String videoId;
 
@@ -57,7 +61,8 @@ public class TranscodeHandler {
         accessKeySecret = System.getenv("s3_accessKeySecret");
 
         videoId = body.getString("videoId");
-        transcodeFolder = new File(workDir, videoId);
+        missionId = body.getString("missionId");
+        transcodeFolder = new File(workDir, missionId);
         inputFile = new File(transcodeFolder, FileNameUtil.getName(inputKey));
         outputFolder = new File(transcodeFolder, "out");
         m3u8File = new File(outputFolder, "index.m3u8");
@@ -73,12 +78,6 @@ public class TranscodeHandler {
         File packagesFolder = new File(workDir, "packages");
         File ffmpegFolder = new File(packagesFolder, "ffmpeg");
         ffmpegFile = new File(ffmpegFolder, "ffmpeg");
-        if (!ffmpegFile.exists()) {
-            String ffmpegUrl = "https://common-objects.oss-cn-beijing.aliyuncs.com" +
-                    "/ffmpeg/linux-static-builds/amd64/5.0.1/ffmpeg-5.0.1-amd64-static/ffmpeg";
-            FileUtil.mkdir(ffmpegFolder);
-            HttpUtil.downloadFile(ffmpegUrl, ffmpegFile);
-        }
     }
 
     /**
@@ -121,15 +120,22 @@ public class TranscodeHandler {
      * 上传转码结果到对象存储
      */
     private void uploadFiles() {
+        String parentKey = m3u8Key.substring(0, m3u8Key.lastIndexOf("/") + 1);
+        List<File> files = FileUtil.loopFiles(outputFolder);
+        for (File file : files) {
+            ossClient.putObject(bucket, parentKey + file.getName(), file);
+        }
     }
 
     /**
      * 回调
      */
     private void callback() {
-
+        String callbackUrl = body.getString("callbackUrl");
+        if (StringUtils.isNotEmpty(callbackUrl)) {
+            HttpUtil.get(callbackUrl);
+        }
     }
-
 
     /**
      * 从这里开始
@@ -138,17 +144,25 @@ public class TranscodeHandler {
      * @param request
      * @param response
      * @param contextObject
-     * @throws IOException
      */
     public void start(String provider, HttpServletRequest request, HttpServletResponse response,
                       Object contextObject) throws IOException {
-        prepareArgs(provider, request, response, contextObject);
-        prepareFFmpeg();
-        prepareInputFile();
-        transcodeM3u8();
-        uploadFiles();
-        callback();
+        //创建子线程执行，先给前端返回结果
+        new Thread(() -> {
+            try {
+                prepareArgs(provider, request, response, contextObject);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            prepareFFmpeg();
+            prepareInputFile();
+            transcodeM3u8();
+            uploadFiles();
+            callback();
+        }).start();
+        Context context = (Context) contextObject;
+        String str = "我是云函数，我收到任务了，requestId = " + context.getRequestId();
+        IoUtil.writeUtf8(response.getOutputStream(), true, str);
     }
-
 
 }
