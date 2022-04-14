@@ -6,8 +6,6 @@ import cn.hutool.core.io.file.FileNameUtil;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.aliyun.fc.runtime.Context;
-import com.aliyun.fc.runtime.Credentials;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.GetObjectRequest;
