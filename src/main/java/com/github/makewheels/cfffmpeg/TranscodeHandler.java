@@ -54,6 +54,7 @@ public class TranscodeHandler {
 
         Context context = (Context) contextObject;
         Credentials credentials = context.getExecutionCredentials();
+        body = JSON.parseObject(IoUtil.readUtf8(request.getInputStream()));
         bucket = body.getString("bucket");
         endpoint = body.getString("endpoint");
         inputKey = body.getString("inputKey");
@@ -62,7 +63,7 @@ public class TranscodeHandler {
         accessKeySecret = credentials.getAccessKeySecret();
         sessionToken = credentials.getSecurityToken();
 
-        body = JSON.parseObject(IoUtil.readUtf8(request.getInputStream()));
+
         videoId = body.getString("videoId");
         transcodeFolder = new File(workDir, videoId);
         inputFile = new File(transcodeFolder, FileNameUtil.mainName(inputKey));
