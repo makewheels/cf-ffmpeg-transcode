@@ -36,7 +36,6 @@ public class TranscodeHandler {
     private String m3u8Key;
     private String accessKeyId;
     private String accessKeySecret;
-    private String sessionToken;
 
     private OSS ossClient;
 
@@ -53,15 +52,13 @@ public class TranscodeHandler {
         this.contextObject = contextObject;
 
         Context context = (Context) contextObject;
-        Credentials credentials = context.getExecutionCredentials();
         body = JSON.parseObject(IoUtil.readUtf8(request.getInputStream()));
         bucket = body.getString("bucket");
         endpoint = body.getString("endpoint");
         inputKey = body.getString("inputKey");
         m3u8Key = body.getString("m3u8Key");
-        accessKeyId = credentials.getAccessKeyId();
-        accessKeySecret = credentials.getAccessKeySecret();
-        sessionToken = credentials.getSecurityToken();
+        accessKeyId = System.getenv("s3_accessKeyId");
+        accessKeySecret = System.getenv("s3_accessKeySecret");
 
 
         videoId = body.getString("videoId");
@@ -92,7 +89,7 @@ public class TranscodeHandler {
      */
     private void prepareInputFile() {
         if (provider.equals("aliyun")) {
-            ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret, sessionToken);
+            ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
             ossClient.getObject(new GetObjectRequest(bucket, inputKey), inputFile);
         }
     }
