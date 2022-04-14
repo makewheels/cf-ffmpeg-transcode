@@ -13,7 +13,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 public class AliyunCloudFunction implements HttpRequestHandler {
-    private TranscodeHandler transcodeHandler;
+    private TranscodeHandler transcodeHandler = new TranscodeHandler();
 
     @Override
     public void handleRequest(HttpServletRequest request, HttpServletResponse response, Context context)
