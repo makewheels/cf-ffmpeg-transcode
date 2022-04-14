@@ -57,7 +57,6 @@ public class TranscodeHandler {
         accessKeyId = System.getenv("s3_accessKeyId");
         accessKeySecret = System.getenv("s3_accessKeySecret");
 
-
         videoId = body.getString("videoId");
         transcodeFolder = new File(workDir, videoId);
         inputFile = new File(transcodeFolder, FileNameUtil.getName(inputKey));
