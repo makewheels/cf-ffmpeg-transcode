@@ -12,8 +12,7 @@ import com.aliyun.oss.model.GetObjectRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 
 public class TranscodeHandler {
     private File workDir = new File(System.getenv("work_dir"));
@@ -92,11 +91,29 @@ public class TranscodeHandler {
         }
     }
 
+    private void executeAndPrint(String cmd) {
+        try {
+            Process process = Runtime.getRuntime().exec(cmd);
+            InputStream inputStream = process.getInputStream();
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * 执行转码
      */
     private void transcodeM3u8() {
-
+        String cmd = ffmpegFile.getAbsolutePath() + " -i " + inputFile.getAbsolutePath() + " -codec copy " +
+                "-vbsf h264_mp4toannexb -flags +global_header -map 0 -f segment -segment_list " +
+                outputFolder.getAbsolutePath() + "/index.m3u8 -segment_time 1 " + outputFolder.getAbsolutePath()
+                + "/%04d.ts";
+        executeAndPrint(cmd);
     }
 
     /**
@@ -105,6 +122,14 @@ public class TranscodeHandler {
     private void uploadFiles() {
 
     }
+
+    /**
+     * 回调
+     */
+    private void callback() {
+
+    }
+
 
     /**
      * 从这里开始
@@ -122,6 +147,7 @@ public class TranscodeHandler {
         prepareInputFile();
         transcodeM3u8();
         uploadFiles();
+        callback();
     }
 
 
