@@ -86,6 +86,7 @@ public class TranscodeHandler {
     private void prepareInputFile() {
         if (provider.equals("aliyun")) {
             ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+            System.out.println("下载文件：" + inputFile.getAbsolutePath());
             ossClient.getObject(new GetObjectRequest(bucket, inputKey), inputFile);
         }
     }
@@ -123,7 +124,9 @@ public class TranscodeHandler {
         String parentKey = m3u8Key.substring(0, m3u8Key.lastIndexOf("/") + 1);
         List<File> files = FileUtil.loopFiles(outputFolder);
         for (File file : files) {
-            ossClient.putObject(bucket, parentKey + file.getName(), file);
+            String key = parentKey + file.getName();
+            System.out.println("上传文件：key = " + key);
+            ossClient.putObject(bucket, key, file);
         }
     }
 
