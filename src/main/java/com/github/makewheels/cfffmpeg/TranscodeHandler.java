@@ -131,7 +131,7 @@ public class TranscodeHandler {
     }
 
     private void deleteAllFiles() {
-        System.out.println("删除所有文件" + transcodeFolder.getAbsolutePath());
+        System.out.println("删除所有文件 " + transcodeFolder.getAbsolutePath());
         FileUtil.del(transcodeFolder);
     }
 
@@ -155,6 +155,11 @@ public class TranscodeHandler {
      */
     public void start(String provider, HttpServletRequest request, HttpServletResponse response,
                       Object contextObject) throws IOException {
+
+        Context context = (Context) contextObject;
+        String str = "我是云函数，我收到任务了，requestId = " + context.getRequestId();
+        IoUtil.writeUtf8(response.getOutputStream(), true, str);
+
         //创建子线程执行，先给前端返回结果
 //        Thread thread = new Thread(() -> {
         try {
@@ -170,9 +175,7 @@ public class TranscodeHandler {
         callback();
 //        });
 //        thread.start();
-        Context context = (Context) contextObject;
-        String str = "我是云函数，我收到任务了，requestId = " + context.getRequestId();
-        IoUtil.writeUtf8(response.getOutputStream(), true, str);
+
     }
 
 }
