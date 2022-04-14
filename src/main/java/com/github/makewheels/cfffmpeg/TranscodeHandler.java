@@ -51,7 +51,6 @@ public class TranscodeHandler {
         this.response = response;
         this.contextObject = contextObject;
 
-        Context context = (Context) contextObject;
         body = JSON.parseObject(IoUtil.readUtf8(request.getInputStream()));
         bucket = body.getString("bucket");
         endpoint = body.getString("endpoint");
