@@ -1,5 +1,6 @@
 package com.github.makewheels.cfffmpeg;
 
+import cn.hutool.core.io.IoUtil;
 import com.aliyun.fc.runtime.Context;
 import com.aliyun.fc.runtime.HttpRequestHandler;
 import org.apache.commons.io.IOUtils;
@@ -11,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 
 public class AliyunCloudFunction implements HttpRequestHandler {
     private TranscodeHandler transcodeHandler = new TranscodeHandler();
@@ -19,7 +21,7 @@ public class AliyunCloudFunction implements HttpRequestHandler {
     public void handleRequest(HttpServletRequest request, HttpServletResponse response, Context context)
             throws IOException {
         transcodeHandler.start();
-        String body = IOUtils.toString(request.getInputStream());
+        String body = IoUtil.readUtf8(request.getInputStream());
         System.out.println(body);
 
         String requestPath = (String) request.getAttribute("FC_REQUEST_PATH");
