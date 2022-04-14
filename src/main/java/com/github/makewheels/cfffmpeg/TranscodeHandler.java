@@ -62,6 +62,9 @@ public class TranscodeHandler {
         inputFile = new File(transcodeFolder, FileNameUtil.getName(inputKey));
         outputFolder = new File(transcodeFolder, "out");
         m3u8File = new File(outputFolder, "index.m3u8");
+
+        FileUtil.mkParentDirs(inputFile);
+        FileUtil.mkdir(outputFolder);
     }
 
     /**
@@ -71,7 +74,6 @@ public class TranscodeHandler {
         File packagesFolder = new File(workDir, "packages");
         File ffmpegFolder = new File(packagesFolder, "ffmpeg");
         ffmpegFile = new File(ffmpegFolder, "ffmpeg");
-        System.out.println(ffmpegFile);
         if (!ffmpegFile.exists()) {
             String ffmpegUrl = "https://common-objects.oss-cn-beijing.aliyuncs.com" +
                     "/ffmpeg/linux-static-builds/amd64/5.0.1/ffmpeg-5.0.1-amd64-static/ffmpeg";
