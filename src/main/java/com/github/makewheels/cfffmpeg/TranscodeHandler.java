@@ -130,6 +130,11 @@ public class TranscodeHandler {
         }
     }
 
+    private void deleteAllFiles() {
+        System.out.println("删除所有文件");
+        FileUtil.del(transcodeFolder);
+    }
+
     /**
      * 回调
      */
@@ -161,6 +166,7 @@ public class TranscodeHandler {
             prepareInputFile();
             transcodeM3u8();
             uploadFiles();
+            deleteAllFiles();
             callback();
         });
         thread.start();
