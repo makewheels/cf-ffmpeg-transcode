@@ -105,15 +105,6 @@ public class TranscodeHandler {
         }
     }
 
-    public static void main(String[] args) {
-        File file = new File("C:\\Users\\thedoflin\\Downloads\\test-videos\\test\\piece\\piece.list");
-        List<String> strings = FileUtil.readUtf8Lines(file);
-        for (String line : strings) {
-//            System.out.println("ffmpeg -i " + line + " -c:v h264 -vf scale=-2:720 -force_key_frames \"expr:gte(t,n_forced*2)\" h264/" + line);
-            System.out.println("ffmpeg -i " + line + " -c:v h264 -force_key_frames \"expr:gte(t,n_forced*2)\" h264/" + line);
-        }
-    }
-
     /**
      * 执行转码
      */
