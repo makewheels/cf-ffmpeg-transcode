@@ -1,0 +1,23 @@
+{
+  "statefulConfig": {
+    "triggerName": "httpTrigger",
+    "description": "",
+    "triggerId": "1c044aa4-4544-4977-b40e-23d7797f46f8",
+    "sourceArn": null,
+    "triggerType": "http",
+    "invocationRole": null,
+    "qualifier": "LATEST",
+    "urlInternet": "https://transcoe-master-video-transcode-pqrshwejna.cn-beijing.fcapp.run",
+    "urlIntranet": "https://transcoe-master-video-transcode-pqrshwejna.cn-beijing-vpc.fcapp.run",
+    "triggerConfig": {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authType": "anonymous"
+    },
+    "createdTime": "2022-04-17T10:21:51Z",
+    "lastModifiedTime": "2022-04-17T10:21:51Z",
+    "name": "httpTrigger"
+  }
+}

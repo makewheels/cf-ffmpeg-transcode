@@ -1,0 +1,38 @@
+{
+  "statefulConfig": {
+    "functionId": "40a45faa-24c9-40f0-adb2-ed5e911e63ca",
+    "functionName": "test",
+    "description": "This is default function description by fc-deploy component",
+    "runtime": "java8",
+    "handler": "example.App::handleRequest",
+    "timeout": 3,
+    "initializer": "example.App::initialize",
+    "initializationTimeout": 3,
+    "codeSize": 15002254,
+    "codeChecksum": "358540112335370916",
+    "memorySize": 128,
+    "gpuMemorySize": null,
+    "environmentVariables": {},
+    "createdTime": "2022-04-17T09:08:20Z",
+    "lastModifiedTime": "2022-04-17T09:08:20Z",
+    "instanceConcurrency": 1,
+    "instanceSoftConcurrency": null,
+    "customContainerConfig": null,
+    "caPort": null,
+    "instanceType": "e1",
+    "layers": null,
+    "instanceLifecycleConfig": {
+      "preFreeze": {
+        "handler": "",
+        "timeout": 3
+      },
+      "preStop": {
+        "handler": "",
+        "timeout": 3
+      }
+    },
+    "customDNS": null,
+    "customRuntimeConfig": null,
+    "name": "test"
+  }
+}

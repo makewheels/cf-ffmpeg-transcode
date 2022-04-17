@@ -1,0 +1,55 @@
+edition: 1.0.0
+name: cf-ffmpeg-transcode
+access: default
+vars:
+  region: cn-beijing
+services:
+  cn-beijing-video-transcode:
+    component: devsapp/fc
+    props:
+      region: ${vars.region}
+      service:
+        name: video-transcode
+        description: 视频转码
+        internetAccess: true
+        role: acs:ram::1618784280874658:role/aliyunfcdefaultrole
+        logConfig:
+          project: aliyun-fc-cn-beijing-1b506ec3-89ff-568d-9f44-5a81a3848219
+          logstore: function-log
+          enableRequestMetrics: true
+          enableInstanceMetrics: true
+          logBeginRule: DefaultRegex
+        nasConfig:
+          userId: 10003
+          groupId: 10003
+          mountPoints:
+            - serverAddr: 1dbd04bb5d-iwj68.cn-beijing.nas.aliyuncs.com
+              nasDir: /
+              fcDir: /mnt/video-transcode
+        vpcConfig:
+          vpcId: vpc-2ze7ua7kz3yy4qohdg3kp
+          securityGroupId: sg-2zehwh629hd5c49x5io8
+          vswitchIds:
+            - vsw-2zewgmgmhnjyf8sm0bb1p
+      function:
+        name: transcode-master
+        description: 并发转码master
+        handler: com.github.makewheels.cfffmpeg.aliyun.AliyunCloudFunction::handleRequestabccc
+        instanceConcurrency: 1
+        runtime: java11
+        codeUri: ./
+        instanceType: e1
+        memorySize: 3072
+        timeout: 300
+        internetAccess: true
+        environmentVariables:
+          key: 'value'
+      triggers:
+        - name: httpTrigger
+          type: http
+          qualifier: LATEST
+          config:
+            authType: anonymous
+            methods:
+              - GET
+              - POST
