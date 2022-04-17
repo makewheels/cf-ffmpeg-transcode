@@ -10,10 +10,11 @@ import java.io.IOException;
 
 public class AliyunCloudFunction implements HttpRequestHandler {
     private TranscodeHandler transcodeHandler = new TranscodeHandler();
+
     @Override
     public void handleRequest(HttpServletRequest request, HttpServletResponse response, Context context)
             throws IOException {
 //        transcodeHandler.start("aliyun", request, response, context);
-        System.out.println("fajwoijwoeig" + System.currentTimeMillis());
+        System.out.println("aaaaaaaaaaaa" + System.currentTimeMillis());
     }
 }

@@ -4,12 +4,12 @@
     "functionName": "transcode-master",
     "description": "并发转码master",
     "runtime": "java11",
-    "handler": "com.github.makewheels.cfffmpeg.aliyun.AliyunCloudFunction::handleRequestabccc",
+    "handler": "com.github.makewheels.cfffmpeg.aliyun.AliyunCloudFunction::handleRequest",
     "timeout": 300,
     "initializer": "",
     "initializationTimeout": 3,
-    "codeSize": 14983998,
-    "codeChecksum": "1863823309530629717",
+    "codeSize": 14983990,
+    "codeChecksum": "8465355648635419901",
     "memorySize": 3072,
     "gpuMemorySize": null,
     "environmentVariables": {
@@ -17,10 +17,10 @@
       "NODE_PATH": "/code/node_modules:/usr/local/lib/node_modules",
       "PATH": "/code/.s/root/usr/local/bin:/code/.s/root/usr/local/sbin:/code/.s/root/usr/bin:/code/.s/root/usr/sbin:/code/.s/root/sbin:/code/.s/root/bin:/code:/code/node_modules/.bin:/code/.s/python/bin:/code/.s/node_modules/.bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/sbin:/bin",
       "PYTHONUSERBASE": "/code/.s/python",
-      "key": "value"
+      "work_dir": "/mnt/video-transcode"
     },
     "createdTime": "2022-04-17T10:21:51Z",
-    "lastModifiedTime": "2022-04-17T10:21:51Z",
+    "lastModifiedTime": "2022-04-17T10:50:25Z",
     "instanceConcurrency": 1,
     "instanceSoftConcurrency": null,
     "customContainerConfig": null,

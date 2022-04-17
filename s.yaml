@@ -34,7 +34,7 @@ services:
       function:
         name: transcode-master
         description: 并发转码master
-        handler: com.github.makewheels.cfffmpeg.aliyun.AliyunCloudFunction::handleRequestabccc
+        handler: com.github.makewheels.cfffmpeg.aliyun.AliyunCloudFunction::handleRequest
         instanceConcurrency: 1
         runtime: java11
         codeUri: ./
@@ -43,7 +43,7 @@ services:
         timeout: 300
         internetAccess: true
         environmentVariables:
-          key: 'value'
+          work_dir: '/mnt/video-transcode'
       triggers:
         - name: httpTrigger
           type: http
