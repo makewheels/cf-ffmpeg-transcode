@@ -20,12 +20,17 @@ public class TranscodeMaster implements HttpRequestHandler {
             int finalI = i;
             new Thread(() -> {
                 System.out.println(finalI);
-                HttpRequest get = HttpUtil.createGet("https://transcoe-worker-" +
+                HttpRequest getRequest = HttpUtil.createGet("https://transcoe-worker-" +
                         "video-transcode-ystvacorwn.cn-beijing-vpc.fcapp.run");
-                get.header("X-Fc-Invocation-Type", "Async");
-                String requestId = get.execute().header("X-Fc-Request-Id");
+                getRequest.header("X-Fc-Invocation-Type", "Async");
+                String requestId = getRequest.execute().header("X-Fc-Request-Id");
                 System.out.println(requestId);
             }).start();
+        }
+        try {
+            Thread.sleep(14000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
