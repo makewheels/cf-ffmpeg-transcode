@@ -8,8 +8,8 @@
     "timeout": 300,
     "initializer": "",
     "initializationTimeout": 3,
-    "codeSize": 14983990,
-    "codeChecksum": "8465355648635419901",
+    "codeSize": 14984132,
+    "codeChecksum": "17467967226482021718",
     "memorySize": 3072,
     "gpuMemorySize": null,
     "environmentVariables": {
@@ -20,7 +20,7 @@
       "work_dir": "/mnt/video-transcode"
     },
     "createdTime": "2022-04-17T10:21:51Z",
-    "lastModifiedTime": "2022-04-17T10:50:25Z",
+    "lastModifiedTime": "2022-04-17T10:59:10Z",
     "instanceConcurrency": 1,
     "instanceSoftConcurrency": null,
     "customContainerConfig": null,

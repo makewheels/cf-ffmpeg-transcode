@@ -14,7 +14,7 @@
     "gpuMemorySize": null,
     "environmentVariables": {},
     "createdTime": "2022-04-17T10:21:16Z",
-    "lastModifiedTime": "2022-04-17T10:51:11Z",
+    "lastModifiedTime": "2022-04-17T10:58:45Z",
     "instanceConcurrency": 1,
     "instanceSoftConcurrency": null,
     "customContainerConfig": null,
