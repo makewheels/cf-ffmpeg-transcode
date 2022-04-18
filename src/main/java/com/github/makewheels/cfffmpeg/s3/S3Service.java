@@ -23,21 +23,44 @@ public class S3Service {
     private String accessKey;
     private String secretKey;
 
-    private String bucketName;
+    private String bucket;
 
     private AmazonS3 amazonS3;
 
-    public void init(S3Config config) {
-        if (amazonS3 != null) {
-            return;
-        }
-        AWSCredentials credentials = new BasicAWSCredentials(config.getAccessKey(), config.getSecretKey());
-        AwsClientBuilder.EndpointConfiguration configuration = new AwsClientBuilder.EndpointConfiguration(
-                config.getEndpoint(), config.getRegion());
+    /**
+     * 给线上云函数调用初始化用
+     *
+     * @param bucket
+     * @param region
+     * @param endpoint
+     */
+    public void init(String bucket, String region, String endpoint) {
+        if (amazonS3 != null) return;
+        String accessKey = System.getenv("s3_accessKeyId");
+        String secretKey = System.getenv("s3_secretKey");
+        AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
+        AwsClientBuilder.EndpointConfiguration configuration
+                = new AwsClientBuilder.EndpointConfiguration(endpoint, region);
         amazonS3 = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(
                 credentials)).withEndpointConfiguration(configuration).build();
-        bucketName = config.getBucketName();
-        region = config.getRegion();
+        this.bucket = bucket;
+        this.region = region;
+    }
+
+    /**
+     * 给我本地部署云函数用
+     *
+     * @param config
+     */
+    public void init(S3Config config) {
+        if (amazonS3 != null) return;
+        AWSCredentials credentials = new BasicAWSCredentials(config.getAccessKey(), config.getSecretKey());
+        AwsClientBuilder.EndpointConfiguration configuration
+                = new AwsClientBuilder.EndpointConfiguration(config.getEndpoint(), config.getRegion());
+        amazonS3 = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(
+                credentials)).withEndpointConfiguration(configuration).build();
+        this.bucket = config.getBucket();
+        this.region = config.getRegion();
     }
 
     private AmazonS3 getClient() {
@@ -51,7 +74,7 @@ public class S3Service {
      * @return
      */
     public S3Object getObject(String key) {
-        return getClient().getObject(bucketName, key);
+        return getClient().getObject(bucket, key);
     }
 
     /**
@@ -62,7 +85,7 @@ public class S3Service {
      * @return
      */
     public PutObjectResult putObject(String key, File file) {
-        return getClient().putObject(bucketName, key, file);
+        return getClient().putObject(bucket, key, file);
     }
 
     /**
@@ -71,7 +94,7 @@ public class S3Service {
      * @param key
      */
     public void deleteObject(String key) {
-        getClient().deleteObject(bucketName, key);
+        getClient().deleteObject(bucket, key);
     }
 
     /**
@@ -81,7 +104,7 @@ public class S3Service {
      * @return
      */
     public DeleteObjectsResult deleteObjects(List<String> keys) {
-        DeleteObjectsRequest request = new DeleteObjectsRequest(bucketName);
+        DeleteObjectsRequest request = new DeleteObjectsRequest(bucket);
         List<DeleteObjectsRequest.KeyVersion> keyVersions = new ArrayList<>(keys.size());
         for (String key : keys) {
             DeleteObjectsRequest.KeyVersion keyVersion = new DeleteObjectsRequest.KeyVersion(key);
@@ -92,16 +115,11 @@ public class S3Service {
     }
 
     /**
-     * 预签名，可指定HttpMethod
-     *
-     * @param key
-     * @param duration
-     * @param httpMethod
-     * @return
+     * 预签名
      */
-    public String generatePresignedUrl(String key, Duration duration, HttpMethod httpMethod) {
-        GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucketName, key)
-                .withMethod(httpMethod).withExpiration(Date.from(Instant.now().plus(duration)));
+    public String getSignedGetUrl(String key) {
+        GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket, key)
+                .withMethod(HttpMethod.GET).withExpiration(Date.from(Instant.now().plus(Duration.ofHours(2))));
         return getClient().generatePresignedUrl(request).toString();
     }
 
@@ -109,7 +127,7 @@ public class S3Service {
      * 从对象存储下载文件到本地
      */
     public ObjectMetadata download(String key, File file) {
-        GetObjectRequest getObjectRequest = new GetObjectRequest(bucketName, key);
+        GetObjectRequest getObjectRequest = new GetObjectRequest(bucket, key);
         return getClient().getObject(getObjectRequest, file);
     }
 

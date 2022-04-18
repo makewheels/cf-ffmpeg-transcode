@@ -21,10 +21,15 @@ public class FFmpegUtil {
         return RuntimeUtil.execForStr(cmd);
     }
 
-    public static JSONObject getMeta(File file) {
+    public static String getMeta(File file) {
         String json = RuntimeUtil.execForStr(PathUtil.getFFprobe()
                 + " \"" + file.getAbsolutePath() + "\"");
-        return JSONObject.parseObject(json);
+        return json;
+    }
+
+    public static String getMeta(String url) {
+        String json = RuntimeUtil.execForStr(PathUtil.getFFprobe() + " " + url);
+        return json;
     }
 
     public static void extractVideo(File src, File dest) {
@@ -81,7 +86,7 @@ public class FFmpegUtil {
         }
         File ffmpegFileList = new File(fileList.get(0), "merge-pieces-" + IdUtil.simpleUUID() + ".list");
         FileUtil.writeUtf8Lines(lines, ffmpegFileList);
-        mergeSegments(ffmpegFileList,dest);
+        mergeSegments(ffmpegFileList, dest);
     }
 
     /**

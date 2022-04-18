@@ -1,4 +1,4 @@
-package com.github.makewheels.cfffmpeg;
+package com.github.makewheels.cfffmpeg.etc;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;

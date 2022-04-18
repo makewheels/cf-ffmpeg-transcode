@@ -1,4 +1,4 @@
-package com.github.makewheels.cfffmpeg;
+package com.github.makewheels.cfffmpeg.etc;
 
 import cn.hutool.core.codec.Base64;
 import cn.hutool.core.util.RuntimeUtil;
@@ -32,7 +32,7 @@ public class DeployUtil {
 
         S3Config config = new S3Config();
         String bucket = "cloud-function-bucket";
-        config.setBucketName(bucket);
+        config.setBucket(bucket);
         config.setAccessKey(ak);
         config.setSecretKey(sk);
         config.setEndpoint("oss-cn-beijing.aliyuncs.com");
@@ -54,6 +54,10 @@ public class DeployUtil {
 
         System.out.println(JSON.toJSONString(client.updateFunctionWithOptions(
                 "video-transcode", "transcode-worker", request, new UpdateFunctionHeaders(), new RuntimeOptions())));
+
+        System.out.println(JSON.toJSONString(client.updateFunctionWithOptions(
+                "video-transcode", "ffprobe", request, new UpdateFunctionHeaders(), new RuntimeOptions())));
+
         service.deleteObject(object);
     }
 }
