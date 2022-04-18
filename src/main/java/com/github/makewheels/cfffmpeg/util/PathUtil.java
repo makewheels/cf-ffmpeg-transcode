@@ -1,11 +1,14 @@
 package com.github.makewheels.cfffmpeg.util;
 
+import cn.hutool.core.io.FileUtil;
+
 import java.io.File;
 
 public class PathUtil {
-    private static File workDir = new File(System.getenv("work_dir"), "video-transcode");
-    private static File ffmpeg = new File(workDir, "ffmpeg/ffmpeg");
-    private static File ffprobe = new File(workDir, "ffmpeg/ffprobe");
+    private static final File nasDir = new File(System.getenv("nas_dir"));
+    private static final File workFolder = new File(nasDir, "video-transcode");
+    private static final File ffmpeg = new File(nasDir, "ffmpeg/ffmpeg");
+    private static final File ffprobe = new File(nasDir, "ffmpeg/ffprobe");
     private static File missionFolder;
 
     public static String getFFmpeg() {
@@ -17,11 +20,15 @@ public class PathUtil {
     }
 
     public static void initMissionFolder(String missionId) {
-        missionFolder = new File(workDir, "mission/" + missionId);
-        File[] files = missionFolder.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                file.delete();
+        missionFolder = new File(workFolder, "mission/" + missionId);
+        if (!missionFolder.exists()) {
+            FileUtil.mkdir(missionFolder);
+        } else {
+            File[] files = missionFolder.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    file.delete();
+                }
             }
         }
     }

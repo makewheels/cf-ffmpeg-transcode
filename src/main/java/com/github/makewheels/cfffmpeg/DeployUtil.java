@@ -1,4 +1,4 @@
-package com.github.makewheels.cfffmpeg.etc;
+package com.github.makewheels.cfffmpeg;
 
 import cn.hutool.core.codec.Base64;
 import cn.hutool.core.util.RuntimeUtil;

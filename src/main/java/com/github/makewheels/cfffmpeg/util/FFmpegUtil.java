@@ -22,13 +22,19 @@ public class FFmpegUtil {
     }
 
     public static String getMeta(File file) {
-        String json = RuntimeUtil.execForStr(PathUtil.getFFprobe()
-                + " \"" + file.getAbsolutePath() + "\"");
+        String cmd = PathUtil.getFFprobe() + " -show_streams -show_format -print_format json -v quiet \""
+                + file.getAbsolutePath() + "\"";
+        log.info(cmd);
+        String json = RuntimeUtil.execForStr(cmd);
+        log.info(json);
         return json;
     }
 
     public static String getMeta(String url) {
-        String json = RuntimeUtil.execForStr(PathUtil.getFFprobe() + " " + url);
+        String cmd = PathUtil.getFFprobe() + " -show_streams -show_format -print_format json -v quiet " + url;
+        log.info(cmd);
+        String json = RuntimeUtil.execForStr(cmd);
+        log.info(json);
         return json;
     }
 

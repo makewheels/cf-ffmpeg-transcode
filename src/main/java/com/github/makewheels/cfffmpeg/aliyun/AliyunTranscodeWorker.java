@@ -5,7 +5,6 @@ import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.IdUtil;
 import com.aliyun.fc.runtime.Context;
 import com.aliyun.fc.runtime.HttpRequestHandler;
-import com.github.makewheels.cfffmpeg.etc.TranscodeHandler;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -13,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 
 public class AliyunTranscodeWorker implements HttpRequestHandler {
-    private TranscodeHandler transcodeHandler = new TranscodeHandler();
 
     @Override
     public void handleRequest(HttpServletRequest request, HttpServletResponse response, Context context)

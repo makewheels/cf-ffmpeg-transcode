@@ -1,6 +1,8 @@
 package com.github.makewheels.cfffmpeg.aliyun;
 
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.http.ContentType;
+import cn.hutool.http.Header;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.aliyun.fc.runtime.Context;
@@ -14,12 +16,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class AliyunFFprobe implements HttpRequestHandler {
-
     @Override
     public void handleRequest(HttpServletRequest request, HttpServletResponse response, Context context)
             throws IOException {
         String json = IoUtil.readUtf8(request.getInputStream());
         String result = new FFprobe().getMeta(json);
+        response.setHeader(Header.CONTENT_TYPE.getValue(), ContentType.JSON.getValue());
         IoUtil.writeUtf8(response.getOutputStream(), true, result);
     }
 
