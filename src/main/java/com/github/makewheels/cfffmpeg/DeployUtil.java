@@ -9,8 +9,8 @@ import com.aliyun.fc_open20210406.models.UpdateFunctionHeaders;
 import com.aliyun.fc_open20210406.models.UpdateFunctionRequest;
 import com.aliyun.teaopenapi.models.Config;
 import com.aliyun.teautil.models.RuntimeOptions;
-import com.github.makewheels.cfffmpeg.util.S3Config;
-import com.github.makewheels.cfffmpeg.util.S3Service;
+import com.github.makewheels.cfffmpeg.s3.S3Config;
+import com.github.makewheels.cfffmpeg.s3.S3Service;
 
 import java.io.File;
 
@@ -43,7 +43,7 @@ public class DeployUtil {
         String object = "cf-ffmpeg-transcode/d.jar";
         System.out.println("开始上传对象存储 " + object);
         service.putObject(object, jar);
-        System.out.println("上传对象存储完成");
+        System.out.println("上传对象存储完成，开始部署：");
 
         Client client = createClient(ak, sk);
         UpdateFunctionRequest request = new UpdateFunctionRequest();

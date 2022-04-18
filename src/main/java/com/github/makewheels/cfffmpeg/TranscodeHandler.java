@@ -75,15 +75,6 @@ public class TranscodeHandler {
     }
 
     /**
-     * 准备ffmpeg
-     */
-    private void prepareFFmpeg() {
-        File packagesFolder = new File(workDir, "packages");
-        File ffmpegFolder = new File(packagesFolder, "ffmpeg");
-        ffmpegFile = new File(ffmpegFolder, "ffmpeg");
-    }
-
-    /**
      * 下载原始文件
      */
     private void prepareInputFile() {
@@ -170,7 +161,6 @@ public class TranscodeHandler {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        prepareFFmpeg();
         prepareInputFile();
         transcodeM3u8();
         uploadFiles();
