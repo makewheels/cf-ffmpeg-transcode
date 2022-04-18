@@ -20,7 +20,7 @@ public class PathUtil {
     }
 
     public static void initMissionFolder(String missionId) {
-        missionFolder = new File(workFolder, "mission/" + missionId);
+        missionFolder = new File(workFolder, missionId);
         if (!missionFolder.exists()) {
             FileUtil.mkdir(missionFolder);
         } else {

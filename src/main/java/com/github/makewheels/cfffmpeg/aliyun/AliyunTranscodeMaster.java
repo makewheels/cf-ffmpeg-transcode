@@ -1,6 +1,8 @@
 package com.github.makewheels.cfffmpeg.aliyun;
 
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.http.ContentType;
+import cn.hutool.http.Header;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.aliyun.fc.runtime.Context;
@@ -12,14 +14,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class AliyunTranscodeMaster implements HttpRequestHandler {
-    private Master master = new Master();
-
     @Override
     public void handleRequest(HttpServletRequest request, HttpServletResponse response, Context context)
             throws IOException {
         JSONObject body = JSON.parseObject(IoUtil.readUtf8(request.getInputStream()));
-
-        IoUtil.writeUtf8(response.getOutputStream(), true, "我是master");
+        String result = new Master().start(body);
+        response.setHeader(Header.CONTENT_TYPE.getValue(), ContentType.JSON.getValue());
+        IoUtil.writeUtf8(response.getOutputStream(), true, result);
     }
-
 }

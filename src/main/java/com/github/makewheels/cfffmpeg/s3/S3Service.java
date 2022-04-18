@@ -1,5 +1,6 @@
 package com.github.makewheels.cfffmpeg.s3;
 
+import cn.hutool.core.io.FileUtil;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -119,7 +120,8 @@ public class S3Service {
      */
     public String getSignedGetUrl(String key) {
         GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket, key)
-                .withMethod(HttpMethod.GET).withExpiration(Date.from(Instant.now().plus(Duration.ofHours(2))));
+                .withMethod(HttpMethod.GET)
+                .withExpiration(Date.from(Instant.now().plus(Duration.ofHours(1))));
         return getClient().generatePresignedUrl(request).toString();
     }
 
@@ -127,6 +129,7 @@ public class S3Service {
      * 从对象存储下载文件到本地
      */
     public ObjectMetadata download(String key, File file) {
+        FileUtil.mkParentDirs(file);
         GetObjectRequest getObjectRequest = new GetObjectRequest(bucket, key);
         return getClient().getObject(getObjectRequest, file);
     }

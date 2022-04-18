@@ -10,5 +10,6 @@ public class Request {
     private String m3u8Prefix;
 
     private String resolution;
+    private String quality;
 
 }

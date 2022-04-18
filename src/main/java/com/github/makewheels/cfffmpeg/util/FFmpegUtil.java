@@ -5,6 +5,7 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.file.FileNameUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RuntimeUtil;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,23 +20,6 @@ public class FFmpegUtil {
     private static String run(String cmd) {
         log.info(cmd);
         return RuntimeUtil.execForStr(cmd);
-    }
-
-    public static String getMeta(File file) {
-        String cmd = PathUtil.getFFprobe() + " -show_streams -show_format -print_format json -v quiet \""
-                + file.getAbsolutePath() + "\"";
-        log.info(cmd);
-        String json = RuntimeUtil.execForStr(cmd);
-        log.info(json);
-        return json;
-    }
-
-    public static String getMeta(String url) {
-        String cmd = PathUtil.getFFprobe() + " -show_streams -show_format -print_format json -v quiet " + url;
-        log.info(cmd);
-        String json = RuntimeUtil.execForStr(cmd);
-        log.info(json);
-        return json;
     }
 
     public static void extractVideo(File src, File dest) {

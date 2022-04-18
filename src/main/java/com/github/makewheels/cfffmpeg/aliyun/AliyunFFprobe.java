@@ -19,8 +19,8 @@ public class AliyunFFprobe implements HttpRequestHandler {
     @Override
     public void handleRequest(HttpServletRequest request, HttpServletResponse response, Context context)
             throws IOException {
-        String json = IoUtil.readUtf8(request.getInputStream());
-        String result = new FFprobe().getMeta(json);
+        JSONObject body = JSON.parseObject(IoUtil.readUtf8(request.getInputStream()));
+        String result = new FFprobe().getMeta(body);
         response.setHeader(Header.CONTENT_TYPE.getValue(), ContentType.JSON.getValue());
         IoUtil.writeUtf8(response.getOutputStream(), true, result);
     }
