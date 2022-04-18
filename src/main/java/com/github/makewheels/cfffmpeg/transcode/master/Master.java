@@ -40,8 +40,8 @@ public class Master {
      */
     public String start(JSONObject body) {
         init(body);
-        transcode(body);
-        return "async return";
+        transcode();
+        return "transcode master return";
     }
 
     /**
@@ -54,12 +54,16 @@ public class Master {
         videoId = body.getString("videoId");
         transcodeId = body.getString("transcodeId");
         missionId = body.getString("missionId");
+        width = body.getInteger("width");
+        height = body.getInteger("height");
+        videoCodec = body.getString("videoCodec");
+        audioCodec = body.getString("audioCodec");
 
         PathUtil.initMissionFolder(missionId);
         missionFolder = PathUtil.getMissionFolder();
 
         ext = "mp4";
-        inputFile = new File(missionFolder, "original/" + FileNameUtil.mainName(inputFile) + "." + ext);
+        inputFile = new File(missionFolder, "original/" + FileNameUtil.getName(inputKey));
         extractAudio = new File(missionFolder, "extract/" + "audio." + ext);
         extractVideo = new File(missionFolder, "extract/" + "video." + ext);
     }
@@ -86,7 +90,7 @@ public class Master {
         return false;
     }
 
-    private void transcode(JSONObject body) {
+    private void transcode() {
         //从对象存储下载原始文件
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
@@ -98,12 +102,15 @@ public class Master {
         JSONObject meta = FFprobeUtil.getMeta(inputFile);
         //判断是否需要启动worker分片转码
         File finalFile = inputFile;
-        if (isNeedWorkers(meta)) {
+        boolean isNeedWorkers = isNeedWorkers(meta);
+        log.info("isNeedWorkers = " + isNeedWorkers);
+        if (isNeedWorkers) {
             finalFile = runWorkers();
         }
         //转hls
         File destFolder = new File(missionFolder, "hls");
         FFmpegUtil.createHls(finalFile, destFolder, transcodeId, 1);
+        uploadFinalResult(destFolder);
     }
 
     /**

@@ -21,16 +21,11 @@ public class PathUtil {
 
     public static void initMissionFolder(String missionId) {
         missionFolder = new File(workFolder, missionId);
-        if (!missionFolder.exists()) {
-            FileUtil.mkdir(missionFolder);
-        } else {
-            File[] files = missionFolder.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    file.delete();
-                }
-            }
+        //如果不存在就创建文件夹，如果存在就清空文件夹
+        if (missionFolder.exists()) {
+            FileUtil.del(missionFolder);
         }
+        FileUtil.mkdir(missionFolder);
     }
 
     public static File getMissionFolder() {

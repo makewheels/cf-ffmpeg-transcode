@@ -24,12 +24,12 @@ public class FFmpegUtil {
 
     public static void extractVideo(File src, File dest) {
         FileUtil.mkParentDirs(dest);
-        run(ffmpeg + " -i \"" + src.getAbsolutePath() + "\" -c copy -an \"" + dest.getAbsolutePath() + "\"");
+        run(ffmpeg + " -i " + src.getAbsolutePath() + " -c copy -an " + dest.getAbsolutePath());
     }
 
     public static void extractAudio(File src, File dest) {
         FileUtil.mkParentDirs(dest);
-        run(ffmpeg + " -i \"" + src.getAbsolutePath() + "\" -c copy -vn \"" + dest.getAbsolutePath() + "\"");
+        run(ffmpeg + " -i " + src.getAbsolutePath() + " -c copy -vn " + dest.getAbsolutePath());
     }
 
     /**
@@ -38,10 +38,10 @@ public class FFmpegUtil {
     public static File splitByTime(File src, File destFolder, int segmentTime) {
         FileUtil.mkdir(destFolder);
         File listFile = new File(destFolder, "pieces.list");
-        run(ffmpeg + " -i \"" + src.getAbsolutePath() + "\" -c copy " +
-                "-f segment -segment_time " + segmentTime
-                + " -segment_list \"" + listFile.getAbsolutePath() + "\" "
-                + destFolder.getAbsolutePath() + "/piece-%04d." + FileNameUtil.extName(src) + "\"");
+        run(ffmpeg + " -i " + src.getAbsolutePath() + " -c copy"
+                + " -f segment -segment_time " + segmentTime
+                + " -segment_list " + listFile.getAbsolutePath() + " "
+                + destFolder.getAbsolutePath() + "/piece-%04d." + FileNameUtil.extName(src));
         return listFile;
     }
 
@@ -54,9 +54,9 @@ public class FFmpegUtil {
      */
     private static void mergeSegments(File ffmpegFileList, File dest) {
         FileUtil.mkParentDirs(dest);
-        run(ffmpeg + " -i \"" + ffmpegFileList.getAbsolutePath() + "\" " +
-                "-f concat -c copy -fflags +genpts " +
-                "\"" + dest.getAbsolutePath() + "\""
+        run(ffmpeg + " -i " + ffmpegFileList.getAbsolutePath() +
+                " -f concat -c copy -fflags +genpts "
+                + dest.getAbsolutePath()
         );
     }
 
@@ -85,10 +85,10 @@ public class FFmpegUtil {
     public static File createHls(File src, File destFolder, String prefix, int hlsTime) {
         FileUtil.mkdir(destFolder);
         File m3u8 = new File(destFolder, prefix + ".m3u8");
-        run(ffmpeg + " -i \"" + src.getAbsolutePath() + "\" -c copy -hls_list_size 0 " +
-                "-hls_time " + hlsTime
-                + " -hls_segment_filename \"" + destFolder.getAbsolutePath() + "/" + prefix + "-%05d.ts\" "
-                + "\"" + m3u8.getAbsolutePath() + "\""
+        run(ffmpeg + " -i " + src.getAbsolutePath() + " -c copy -hls_list_size 0"
+                + " -hls_time " + hlsTime
+                + " -hls_segment_filename " + destFolder.getAbsolutePath() + "/" + prefix + "-%05d.ts "
+                + m3u8.getAbsolutePath()
         );
         return m3u8;
     }
@@ -99,9 +99,9 @@ public class FFmpegUtil {
     public static void mergeVideoAndAudio(File video, File audio, File dest) {
         FileUtil.mkParentDirs(dest);
         run(ffmpeg
-                + " -i \"" + video.getAbsolutePath() + "\" "
-                + " -i \"" + audio.getAbsolutePath() + "\" " +
-                "-c copy \"" + dest.getAbsolutePath() + "\""
+                + " -i " + video.getAbsolutePath()
+                + " -i " + audio.getAbsolutePath()
+                + " -c copy " + dest.getAbsolutePath()
         );
     }
 }

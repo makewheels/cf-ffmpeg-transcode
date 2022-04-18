@@ -11,11 +11,11 @@ import java.io.File;
 @Slf4j
 public class FFprobeUtil {
     public static JSONObject getMeta(File file) {
-        String cmd = PathUtil.getFFprobe() + " -show_streams -show_format -print_format json -v quiet \""
-                + file.getAbsolutePath() + "\"";
+        String cmd = PathUtil.getFFprobe() + " -show_streams -show_format -print_format json -v quiet "
+                + file.getAbsolutePath();
         log.info(cmd);
         String json = RuntimeUtil.execForStr(cmd);
-        log.info(json);
+//        log.info(json);
         return JSON.parseObject(json);
     }
 
