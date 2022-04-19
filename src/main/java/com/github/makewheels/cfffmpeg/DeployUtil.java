@@ -42,7 +42,7 @@ public class DeployUtil {
         service.init(config);
         String object = "cf-ffmpeg-transcode/d.jar";
         System.out.println("开始上传对象存储 " + object);
-        service.putObject(object, jar);
+        service.putObjectS3(object, jar);
         System.out.println("上传对象存储完成，开始部署：");
 
         Client client = createClient(ak, sk);
@@ -50,13 +50,16 @@ public class DeployUtil {
         request.setCode(new Code().setOssBucketName(bucket).setOssObjectName(object));
 
         System.out.println(JSON.toJSONString(client.updateFunctionWithOptions(
-                "video-transcode", "transcode-master", request, new UpdateFunctionHeaders(), new RuntimeOptions())));
+                "video-transcode", "transcode-master", request,
+                new UpdateFunctionHeaders(), new RuntimeOptions())));
 
         System.out.println(JSON.toJSONString(client.updateFunctionWithOptions(
-                "video-transcode", "transcode-worker", request, new UpdateFunctionHeaders(), new RuntimeOptions())));
+                "video-transcode", "transcode-worker", request,
+                new UpdateFunctionHeaders(), new RuntimeOptions())));
 
         System.out.println(JSON.toJSONString(client.updateFunctionWithOptions(
-                "video-transcode", "ffprobe", request, new UpdateFunctionHeaders(), new RuntimeOptions())));
+                "video-transcode", "ffprobe", request,
+                new UpdateFunctionHeaders(), new RuntimeOptions())));
 
         service.deleteObject(object);
     }

@@ -1,8 +1,10 @@
 package com.github.makewheels.cfffmpeg.transcode;
 
-import cn.hutool.core.date.StopWatch;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.file.FileNameUtil;
+import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.github.makewheels.cfffmpeg.s3.S3Service;
 import com.github.makewheels.cfffmpeg.util.FFmpegUtil;
@@ -11,7 +13,7 @@ import com.github.makewheels.cfffmpeg.util.PathUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 
@@ -27,14 +29,13 @@ public class Master {
     private String videoCodec;
     private String audioCodec;
     private String quality;
+    private String callbackUrl;
 
     private File missionFolder;
     private File inputFile;
     private String ext;
     private File extractAudio;
     private File extractVideo;
-
-    private final JSONObject cost = new JSONObject();
 
     /**
      * 开始执行
@@ -43,6 +44,7 @@ public class Master {
         log.info("Master.start");
         init(body);
         transcode();
+        onFinish();
         log.info("Master.end");
         return "transcode master return";
     }
@@ -62,13 +64,13 @@ public class Master {
         videoCodec = body.getString("videoCodec");
         audioCodec = body.getString("audioCodec");
         quality = body.getString("quality");
+        callbackUrl = body.getString("callbackUrl");
 
         PathUtil.initMissionFolder(missionId);
         missionFolder = PathUtil.getMissionFolder();
 
         ext = "mp4";
         inputFile = new File(missionFolder, "original/" + FileNameUtil.getName(inputKey));
-        inputFile = new File("/tmp/original/" + FileNameUtil.getName(inputKey));
         extractAudio = new File(missionFolder, "extract/" + "audio." + ext);
         extractVideo = new File(missionFolder, "extract/" + "video." + ext);
     }
@@ -95,15 +97,24 @@ public class Master {
         return false;
     }
 
-    private void transcode() {
+    private void downloadFile() {
         //从对象存储下载原始文件
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
         log.info("开始从对象存储下载源文件 inputKey = " + inputKey);
-        s3Service.download(inputKey, inputFile);
+        FileUtil.mkParentDirs(inputFile);
+        String url = s3Service.signGetUrl(inputKey);
+        System.out.println(url);
+//        System.out.println(RuntimeUtil.execForStr("
+//        sed -i -E 's/(deb|security).debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list"));
+//        System.out.println(RuntimeUtil.execForStr("apt update"));
+//        System.out.println(RuntimeUtil.execForStr("apt install axel"));
+//        System.out.println(RuntimeUtil.execForStr("/usr/bin/axel -n 4 " + url
+//        + " -o " + inputFile.getAbsolutePath()));
+        HttpUtil.downloadFile(url, inputFile);
         log.info("对象存储下载完成 inputFile = " + inputFile.getAbsolutePath());
-        stopWatch.stop();
-        cost.put("downloadOriginalFile", stopWatch.getLastTaskTimeMillis());
+    }
+
+    private void transcode() {
+        downloadFile();
 
         //ffprobe读取源文件信息
         JSONObject meta = FFprobeUtil.getMeta(inputFile);
@@ -112,41 +123,107 @@ public class Master {
         boolean isNeedWorkers = isNeedWorkers(meta);
         log.info("isNeedWorkers = " + isNeedWorkers);
         if (isNeedWorkers) {
-//            finalFile = runWorkers();
+            finalFile = runWorkers();
         }
         //转hls
-        File destFolder = new File(missionFolder, "hls");
-        log.info("开始转码hls");
-        FFmpegUtil.createHls(finalFile, destFolder, transcodeId, 1);
-        log.info("转码hls完成");
-        uploadHls(destFolder);
+        createAndUploadHls(finalFile);
+    }
+
+    private final Object uploadLock = new Object();
+
+    class Uploader extends Thread {
+        private boolean running = true;
+        private final File destFolder;
+
+        public Uploader(File destFolder) {
+            this.destFolder = destFolder;
+        }
+
+        public void setRunning(boolean running) {
+            this.running = running;
+        }
+
+        public void run() {
+            while (running) {
+                ThreadUtil.sleep(4);
+                //扫描ts文件
+                File[] filesArray = destFolder.listFiles(file -> file.getName().endsWith(".ts"));
+                if (filesArray == null || filesArray.length == 0) continue;
+
+                List<File> files = new ArrayList<>(Arrays.asList(filesArray));
+                files.sort(Comparator.comparing(File::getName));
+                //安全起见，最后一个文件可能ffmpeg还在写入，跳过
+                files.remove(files.size() - 1);
+                if (CollectionUtil.isEmpty(files)) continue;
+                log.info("子线程扫描文件列表，总数：" + files.size());
+                //上传
+                for (File file : files) {
+                    //可能子线程这一批任务执行的慢了，那主线程已将上传完，并且删除了文件
+                    synchronized (uploadLock) {
+                        //所以判断如果文件不存在则跳过
+                        if (!file.exists()) {
+                            continue;
+                        }
+                        String filename = file.getName();
+                        String shortName = filename.substring(filename.length() - 8);
+                        s3Service.putObject(outputDir + "/" + filename, file);
+                        boolean delete = file.delete();
+                        log.info("子线程上传：" + shortName + " 删除：" + delete);
+                    }
+                }
+            }
+        }
     }
 
     /**
-     * 上传m3u8碎片
+     * 转码m3u8
+     * 原来是串行，先转出很多ts碎片，再loopFiles，上传对象存储
+     * 现在改成并行，主线程运行ffmpeg转hls，子线程扫描destFolder上传ts碎片
      */
-    private void uploadHls(File hlsFolder) {
-        List<File> files = FileUtil.loopFiles(hlsFolder);
-        log.info("开始上传hls到对象存储，数量 = " + files.size());
+    private void createAndUploadHls(File src) {
+        log.info("开始转码hls");
+        File destFolder = new File(missionFolder, "hls");
+        //启动子线程上传对象存储
+        Uploader uploader = new Uploader(destFolder);
+        uploader.start();
+        //开始转码
+        FFmpegUtil.createHls(src, destFolder, transcodeId, 1);
+        //转码完成，停止子线程，主线程继续上传剩下的
+        uploader.setRunning(false);
+        log.info("主线程：转码完毕，已将子线程停止");
+        //子线程可能在正在上传和删除，遍历上传要先判断文件是否存在
+        List<File> files = FileUtil.loopFiles(destFolder);
+        log.info("主线程：扫描文件结果，总数：" + files.size());
+        //这时可能子线程还在上传，主线程从尾部开始传，它俩不冲突
+        Collections.reverse(files);
         for (File file : files) {
-            s3Service.putObject(outputDir + "/" + file.getName(), file);
+            //我终究还是加锁了，避免出现一种情况
+            //这里文件是存在的，但是s3 sdk上传的过程中，文件被其它线程删掉了，那还会抛异常
+            synchronized (uploadLock) {
+                if (!file.exists()) {
+                    log.info("主线程：文件不存在，跳过：" + file.getName());
+                    continue;
+                }
+                s3Service.putObject(outputDir + "/" + file.getName(), file);
+                log.info("主线程：上传：" + file.getName());
+            }
         }
-        log.info("上传对象存储完成");
+        log.info("转码hls完成");
     }
 
     /**
      * 真正开始执行转码，启动并发分片
      */
     private File runWorkers() {
-        log.info("分离audio");
+        log.info("开始分离audio");
         FFmpegUtil.extractAudio(inputFile, extractAudio);
         log.info("分离audio完成 " + extractAudio.getAbsolutePath());
 
-        log.info("分离video");
+        log.info("开始分离video");
         FFmpegUtil.extractVideo(inputFile, extractVideo);
         log.info("分离video完成 " + extractVideo.getAbsolutePath());
 
-        return new File("");
+        return inputFile;
     }
 
     /**
@@ -161,6 +238,18 @@ public class Master {
      */
     private void handleAudio() {
 
+    }
+
+    /**
+     * 在转码完成时
+     */
+    private void onFinish() {
+        if (callbackUrl != null) {
+            log.info("callback开始");
+            HttpUtil.get(callbackUrl);
+            log.info("callback结束");
+        }
+        FileUtil.del(missionFolder);
     }
 
 }

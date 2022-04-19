@@ -3,6 +3,7 @@ package com.github.makewheels.cfffmpeg.util;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.file.FileNameUtil;
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RuntimeUtil;
 import com.alibaba.fastjson.JSON;
