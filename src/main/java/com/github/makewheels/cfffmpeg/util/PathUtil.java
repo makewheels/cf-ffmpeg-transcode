@@ -21,10 +21,8 @@ public class PathUtil {
 
     public static void initMissionFolder(String missionId) {
         missionFolder = new File(workFolder, missionId);
-        //如果不存在就创建文件夹，如果存在就清空文件夹
-        if (missionFolder.exists()) {
-            FileUtil.del(missionFolder);
-        }
+        //如果存在，先清空
+        FileUtil.del(missionFolder);
         FileUtil.mkdir(missionFolder);
     }
 

@@ -1,4 +1,4 @@
-package com.github.makewheels.cfffmpeg.transcode.master;
+package com.github.makewheels.cfffmpeg.transcode;
 
 import cn.hutool.core.date.StopWatch;
 import cn.hutool.core.io.FileUtil;
@@ -26,6 +26,7 @@ public class Master {
     private int height;
     private String videoCodec;
     private String audioCodec;
+    private String quality;
 
     private File missionFolder;
     private File inputFile;
@@ -39,8 +40,10 @@ public class Master {
      * 开始执行
      */
     public String start(JSONObject body) {
+        log.info("Master.start");
         init(body);
         transcode();
+        log.info("Master.end");
         return "transcode master return";
     }
 
@@ -58,12 +61,14 @@ public class Master {
         height = body.getInteger("height");
         videoCodec = body.getString("videoCodec");
         audioCodec = body.getString("audioCodec");
+        quality = body.getString("quality");
 
         PathUtil.initMissionFolder(missionId);
         missionFolder = PathUtil.getMissionFolder();
 
         ext = "mp4";
         inputFile = new File(missionFolder, "original/" + FileNameUtil.getName(inputKey));
+        inputFile = new File("/tmp/original/" + FileNameUtil.getName(inputKey));
         extractAudio = new File(missionFolder, "extract/" + "audio." + ext);
         extractVideo = new File(missionFolder, "extract/" + "video." + ext);
     }
@@ -94,7 +99,9 @@ public class Master {
         //从对象存储下载原始文件
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
+        log.info("开始从对象存储下载源文件 inputKey = " + inputKey);
         s3Service.download(inputKey, inputFile);
+        log.info("对象存储下载完成 inputFile = " + inputFile.getAbsolutePath());
         stopWatch.stop();
         cost.put("downloadOriginalFile", stopWatch.getLastTaskTimeMillis());
 
@@ -105,31 +112,39 @@ public class Master {
         boolean isNeedWorkers = isNeedWorkers(meta);
         log.info("isNeedWorkers = " + isNeedWorkers);
         if (isNeedWorkers) {
-            finalFile = runWorkers();
+//            finalFile = runWorkers();
         }
         //转hls
         File destFolder = new File(missionFolder, "hls");
+        log.info("开始转码hls");
         FFmpegUtil.createHls(finalFile, destFolder, transcodeId, 1);
-        uploadFinalResult(destFolder);
+        log.info("转码hls完成");
+        uploadHls(destFolder);
     }
 
     /**
      * 上传m3u8碎片
      */
-    private void uploadFinalResult(File hlsFolder) {
+    private void uploadHls(File hlsFolder) {
         List<File> files = FileUtil.loopFiles(hlsFolder);
+        log.info("开始上传hls到对象存储，数量 = " + files.size());
         for (File file : files) {
             s3Service.putObject(outputDir + "/" + file.getName(), file);
         }
+        log.info("上传对象存储完成");
     }
 
     /**
      * 真正开始执行转码，启动并发分片
      */
     private File runWorkers() {
-        //音视频分离
+        log.info("分离audio");
         FFmpegUtil.extractAudio(inputFile, extractAudio);
+        log.info("分离audio完成 " + extractAudio.getAbsolutePath());
+
+        log.info("分离video");
         FFmpegUtil.extractVideo(inputFile, extractVideo);
+        log.info("分离video完成 " + extractVideo.getAbsolutePath());
 
         return new File("");
     }
