@@ -37,6 +37,8 @@ public class Master {
     private File extractAudio;
     private File extractVideo;
 
+    private JSONObject meta;
+
     /**
      * 开始执行
      */
@@ -80,7 +82,7 @@ public class Master {
      * 目前来说，我要改的东西只有：分辨率，音频、视频的codec
      */
     private boolean isNeedWorkers(JSONObject meta) {
-        meta.getJSONObject("format").getString("bit_rate");
+        int bitRate = Integer.parseInt(meta.getJSONObject("format").getString("bit_rate"));
         JSONObject audioSteam = FFprobeUtil.getAudioSteam(meta);
         JSONObject videoSteam = FFprobeUtil.getVideoSteam(meta);
         //如果codec不一致，那就需要转码
@@ -117,7 +119,7 @@ public class Master {
         downloadFile();
 
         //ffprobe读取源文件信息
-        JSONObject meta = FFprobeUtil.getMeta(inputFile);
+        meta = FFprobeUtil.getMeta(inputFile);
         //判断是否需要启动worker分片转码
         File finalFile = inputFile;
         boolean isNeedWorkers = isNeedWorkers(meta);
@@ -200,7 +202,7 @@ public class Master {
             Collections.reverse(files);
             for (File file : files) {
                 //我终究还是加锁了，避免出现一种情况
-                //这里文件是存在的，但是s3 sdk上传的过程中，文件被其它线程删掉了，那还会抛异常
+                //这里文件是存在的，但是s3 sdk上传的过程中，文件被其它线程删掉了，那会抛异常
                 synchronized (uploadLock) {
                     if (!file.exists()) {
                         log.info("主线程：文件不存在，跳过：" + file.getName());
@@ -218,13 +220,8 @@ public class Master {
      * 真正开始执行转码，启动并发分片
      */
     private File runWorkers() {
-        log.info("开始分离audio");
-        FFmpegUtil.extractAudio(inputFile, extractAudio);
-        log.info("分离audio完成 " + extractAudio.getAbsolutePath());
-
-        log.info("开始分离video");
-        FFmpegUtil.extractVideo(inputFile, extractVideo);
-        log.info("分离video完成 " + extractVideo.getAbsolutePath());
+        handleVideo();
+        handleAudio();
 
         return inputFile;
     }
@@ -232,15 +229,44 @@ public class Master {
     /**
      * 处理视频部分
      */
-    private void handleVideo() {
+    private File handleVideo() {
+        log.info("开始分离video");
+        FFmpegUtil.extractVideo(inputFile, extractVideo);
+        log.info("分离video完成 " + extractVideo.getAbsolutePath());
 
+        //判断是否需要转码
+        JSONObject videoSteam = FFprobeUtil.getVideoSteam(meta);
+        if (videoSteam.getString("codec_name").equals(videoCodec)
+                && videoSteam.getInteger("width")
+                * videoSteam.getInteger("height") > (width * height)) {
+            return extractVideo;
+        }
+
+
+        return null;
     }
 
     /**
      * 处理音频部分
      */
-    private void handleAudio() {
+    private File handleAudio() {
+        log.info("开始分离audio");
+        FFmpegUtil.extractAudio(inputFile, extractAudio);
+        log.info("分离audio完成 " + extractAudio.getAbsolutePath());
 
+        //如果不需要改codec，那就直接返回
+        JSONObject audioSteam = FFprobeUtil.getAudioSteam(meta);
+        if (audioSteam.getString("codec_name").equals(audioCodec)) {
+            return extractAudio;
+        }
+
+        //如果需要改codec
+        //分片
+        //执行，等待子容器结果
+        //合并segments
+        //返回
+
+        return null;
     }
 
     /**

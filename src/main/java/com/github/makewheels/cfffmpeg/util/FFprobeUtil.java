@@ -15,7 +15,6 @@ public class FFprobeUtil {
                 + file.getAbsolutePath();
         log.info(cmd);
         String json = RuntimeUtil.execForStr(cmd);
-//        log.info(json);
         return JSON.parseObject(json);
     }
 

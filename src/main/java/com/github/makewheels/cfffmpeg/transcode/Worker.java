@@ -10,8 +10,6 @@ public class Worker {
     public String run(JSONObject body) {
         String cmd = body.getString("cmd");
         System.out.println(cmd);
-        System.out.println();
-
         return CompletableFuture.supplyAsync(() -> RuntimeUtil.execForStr(cmd)).join();
     }
 
