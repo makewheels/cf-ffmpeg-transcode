@@ -192,20 +192,23 @@ public class Master {
         uploader.setRunning(false);
         log.info("主线程：转码完毕，已将子线程停止");
         //子线程可能在正在上传和删除，遍历上传要先判断文件是否存在
-        List<File> files = FileUtil.loopFiles(destFolder);
-        log.info("主线程：扫描文件结果，总数：" + files.size());
-        //这时可能子线程还在上传，主线程从尾部开始传，它俩不冲突
-        Collections.reverse(files);
-        for (File file : files) {
-            //我终究还是加锁了，避免出现一种情况
-            //这里文件是存在的，但是s3 sdk上传的过程中，文件被其它线程删掉了，那还会抛异常
-            synchronized (uploadLock) {
-                if (!file.exists()) {
-                    log.info("主线程：文件不存在，跳过：" + file.getName());
-                    continue;
+        File[] filesArray = destFolder.listFiles(file -> file.getName().endsWith(".ts"));
+        if (filesArray != null && filesArray.length != 0) {
+            List<File> files = new ArrayList<>(Arrays.asList(filesArray));
+            log.info("主线程：扫描文件结果，总数：" + files.size());
+            //这时可能子线程还在上传，主线程从尾部开始传，它俩不冲突
+            Collections.reverse(files);
+            for (File file : files) {
+                //我终究还是加锁了，避免出现一种情况
+                //这里文件是存在的，但是s3 sdk上传的过程中，文件被其它线程删掉了，那还会抛异常
+                synchronized (uploadLock) {
+                    if (!file.exists()) {
+                        log.info("主线程：文件不存在，跳过：" + file.getName());
+                        continue;
+                    }
+                    s3Service.putObject(outputDir + "/" + file.getName(), file);
+                    log.info("主线程：上传：" + file.getName());
                 }
-                s3Service.putObject(outputDir + "/" + file.getName(), file);
-                log.info("主线程：上传：" + file.getName());
             }
         }
         log.info("转码hls完成");
