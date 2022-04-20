@@ -1,9 +1,31 @@
 package com.github.makewheels.cfffmpeg.functions.transcode;
 
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.thread.ThreadUtil;
+
+import java.io.File;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 public class TestThread {
     public static void main(String[] args) throws InterruptedException {
+        FutureTask<File> futureTask1 = new FutureTask<>(new Callable<File>() {
+            @Override
+            public File call() throws Exception {
+                return null;
+            }
+        });
+        FutureTask<File> futureTask2 = new FutureTask<>(null);
+//        for (FutureTask<String> futureTask : null) {
+//            try {
+//                System.out.println("worker某不重要结果长度：" + FileUtil.readableFileSize(futureTask.get().length()));
+//            } catch (InterruptedException | ExecutionException e) {
+//                throw new RuntimeException(e);
+//            }
+//        }
+
+
         for (int i = 0; i < 10; i++) {
             Thread thread = new Thread(() -> {
                 ThreadUtil.sleep(40);

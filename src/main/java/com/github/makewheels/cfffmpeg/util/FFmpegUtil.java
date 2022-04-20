@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -38,7 +39,7 @@ public class FFmpegUtil {
         File listFile = new File(destFolder, "pieces.list");
         run(ffmpeg + " -i " + src.getAbsolutePath() + " -c copy"
                 + " -f segment -segment_time " + segmentTimeLength
-                + " -segment_list " + listFile.getAbsolutePath() + " "
+                + " -reset_timestamps 1 -segment_list " + listFile.getAbsolutePath() + " "
                 + destFolder.getAbsolutePath() + "/piece-%04d." + FileNameUtil.extName(src));
         return listFile;
     }
@@ -52,9 +53,8 @@ public class FFmpegUtil {
      */
     private static void mergeSegments(File ffmpegFileList, File dest) {
         FileUtil.mkParentDirs(dest);
-        run(ffmpeg + " -i " + ffmpegFileList.getAbsolutePath() +
-                " -f concat -c copy -fflags +genpts "
-                + dest.getAbsolutePath()
+        run(ffmpeg + " -f concat -safe 0 -i " + ffmpegFileList.getAbsolutePath() +
+                " -c copy " + dest.getAbsolutePath()
         );
     }
 
@@ -67,12 +67,14 @@ public class FFmpegUtil {
      */
     public static void mergeSegments(List<File> fileList, File dest) {
         if (CollectionUtil.isEmpty(fileList)) return;
+        fileList.sort(Comparator.comparing(File::getName));
         FileUtil.mkParentDirs(dest);
         List<String> lines = new ArrayList<>(fileList.size());
         for (File file : fileList) {
             lines.add("file '" + file.getAbsolutePath() + "'");
         }
-        File ffmpegFileList = new File(fileList.get(0), "merge-pieces-" + IdUtil.simpleUUID() + ".list");
+        File ffmpegFileList = new File(fileList.get(0).getParent(),
+                "ffmpeg-merge-pieces-" + IdUtil.simpleUUID() + ".list");
         FileUtil.writeUtf8Lines(lines, ffmpegFileList);
         mergeSegments(ffmpegFileList, dest);
     }

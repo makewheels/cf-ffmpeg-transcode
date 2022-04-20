@@ -13,6 +13,7 @@ public class PathUtil {
 
     public static String getFFmpeg() {
         return ffmpeg.getAbsolutePath();
+//        return "ffmpeg";
     }
 
     public static String getFFprobe() {

@@ -3,6 +3,7 @@ package com.github.makewheels.cfffmpeg.functions.transcode;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.io.file.FileNameUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.http.HttpUtil;
@@ -15,7 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 
 @Slf4j
 
@@ -274,7 +278,14 @@ public class Master {
         while (true) {
             boolean isAllFinish = true;
             for (FutureTask<T> futureTask : futureTasks) {
-                if (!futureTask.isDone()) {
+                if (futureTask.isDone()) {
+//                    try {
+//                        log.info("worker某不重要结果长度："
+//                                + FileUtil.readableFileSize(futureTask.get().toString().length()));
+//                    } catch (InterruptedException | ExecutionException e) {
+//                        throw new RuntimeException(e);
+//                    }
+                } else {
                     isAllFinish = false;
                     break;
                 }
@@ -295,12 +306,14 @@ public class Master {
 
         ExecutorService executorService = Executors.newFixedThreadPool(2);
         List<FutureTask<File>> futureTasks = ListUtil.toList(futureTask1, futureTask2);
-        futureTasks.forEach(executorService::execute);
+        futureTasks.forEach(executorService::submit);
 
         //子线程等待音视频两个线程结果
         waitComplete(executorService, futureTasks);
+
         File video = futureTask1.get();
         File audio = futureTask2.get();
+
         //合并音视频
         File finalFile = new File(missionFolder, "final/final.mp4");
         FFmpegUtil.mergeVideoAndAudio(video, audio, finalFile);
@@ -318,13 +331,13 @@ public class Master {
         //判断是否需要转码
         if (!isNeedChangeVideoCodec(meta)) return extractVideo;
 
-        File transcodeFolder = new File(missionFolder, "transcode-video");
+        File transcodeFolder = new File(missionFolder, "handle-video");
         File segmentsFolder = new File(transcodeFolder, "original-segments");
         File transcodeResultsFolder = new File(transcodeFolder, "transcode-segments");
         log.info("视频转码：开始分片segments");
-        FFmpegUtil.splitToSegments(extractVideo, segmentsFolder, 16);
+        FFmpegUtil.splitToSegments(extractVideo, segmentsFolder, 8);
 
-        List<File> segments = FileUtil.loopFiles(segmentsFolder);
+        List<File> segments = FileUtil.loopFiles(segmentsFolder, file -> !file.getName().endsWith(".list"));
         int segmentAmount = segments.size();
         log.info("视频转码：分片segments完成，总数：" + segmentAmount);
 
@@ -335,22 +348,23 @@ public class Master {
             JSONObject request = new JSONObject();
             //如果要改分辨率
             String resolutionCmd = "";
-            if (isNeedChangeVideoResolution(meta)) resolutionCmd = "-vf scale=-2:720";
+            if (isNeedChangeVideoResolution(meta)) resolutionCmd = "-vf scale=-2:720 ";
             String codecCmd;
             //如果要改codec
             if (isNeedChangeVideoCodec(meta)) {
-                codecCmd = "-c:v " + videoCodec;
+                codecCmd = "-c:v " + videoCodec + " ";
             } else {
-                codecCmd = "-c copy";
+                codecCmd = "-c copy ";
             }
-            String cmd = PathUtil.getFFmpeg() + " -i " + segment.getAbsolutePath() + " " + codecCmd + " "
-                    + resolutionCmd + " " + transcodeResultsFolder.getAbsolutePath() + "/" + segment.getName();
+            FileUtil.mkdir(transcodeResultsFolder);
+            String cmd = PathUtil.getFFmpeg() + " -i " + segment.getAbsolutePath() + " " + codecCmd
+                    + resolutionCmd + transcodeResultsFolder.getAbsolutePath() + "/" + segment.getName();
             request.put("cmd", cmd);
             FutureTask<String> futureTask = new FutureTask<>(() ->
                     HttpUtil.post("https://transcoe-worker-video-transcode"
-                            + "-ystvacorwn.cn-beijing-vpc.fcapp.run", request)
+                            + "-ystvacorwn.cn-beijing-vpc.fcapp.run", request.toJSONString())
             );
-            executorService.execute(futureTask);
+            executorService.submit(futureTask);
             futureTasks.add(futureTask);
         }
         log.info("视频转码：启动容器完成");
@@ -361,7 +375,8 @@ public class Master {
         log.info("视频转码：所有容器转码任务都完成了");
         log.info("视频转码：开始合并分片");
         File finalVideo = new File(transcodeFolder, "final/final." + ext);
-        FFmpegUtil.mergeSegments(FileUtil.loopFiles(transcodeResultsFolder), finalVideo);
+        List<File> files = new ArrayList<>(Arrays.asList(transcodeResultsFolder.listFiles()));
+        FFmpegUtil.mergeSegments(files, finalVideo);
         log.info("视频转码：合并分片完成，视频部分结束");
         return finalVideo;
     }
@@ -377,13 +392,13 @@ public class Master {
         //判断是否需要转码
         if (!isNeedTranscodeAudio(meta)) return extractAudio;
 
-        File transcodeFolder = new File(missionFolder, "transcode-audio");
+        File transcodeFolder = new File(missionFolder, "handle-audio");
         File segmentsFolder = new File(transcodeFolder, "original-segments");
         File transcodeResultsFolder = new File(transcodeFolder, "transcode-segments");
         log.info("音频转码：开始分片");
-        FFmpegUtil.splitToSegments(extractAudio, segmentsFolder, 128);
+        FFmpegUtil.splitToSegments(extractAudio, segmentsFolder, 256);
 
-        List<File> segments = FileUtil.loopFiles(segmentsFolder);
+        List<File> segments = FileUtil.loopFiles(segmentsFolder, file -> !file.getName().endsWith(".list"));
         int segmentAmount = segments.size();
         log.info("音频转码：分片segments完成，总数：" + segmentAmount);
 
@@ -395,18 +410,20 @@ public class Master {
             String codecCmd;
             //如果要改codec
             if (isNeedChangeAudioCodec(meta)) {
-                codecCmd = "-c:v " + audioCodec;
+                codecCmd = "-c:a " + audioCodec + " ";
             } else {
-                codecCmd = "-c copy";
+                codecCmd = "-c copy ";
             }
-            String cmd = PathUtil.getFFmpeg() + " -i " + segment.getAbsolutePath() + " " + codecCmd + " "
+            FileUtil.mkdir(transcodeResultsFolder);
+            String cmd = PathUtil.getFFmpeg() + " -i " + segment.getAbsolutePath() + " " + codecCmd
                     + transcodeResultsFolder.getAbsolutePath() + "/" + segment.getName();
+//            log.info(cmd);
             request.put("cmd", cmd);
             FutureTask<String> futureTask = new FutureTask<>(() ->
                     HttpUtil.post("https://transcoe-worker-video-transcode"
-                            + "-ystvacorwn.cn-beijing-vpc.fcapp.run", request)
+                            + "-ystvacorwn.cn-beijing-vpc.fcapp.run", request.toJSONString())
             );
-            executorService.execute(futureTask);
+            executorService.submit(futureTask);
             futureTasks.add(futureTask);
         }
         log.info("音频转码：启动容器完成");
@@ -417,7 +434,8 @@ public class Master {
         log.info("音频转码：所有容器转码任务都完成了");
         log.info("音频转码：开始合并分片");
         File finalAudio = new File(transcodeFolder, "final/final." + ext);
-        FFmpegUtil.mergeSegments(FileUtil.loopFiles(transcodeResultsFolder), finalAudio);
+        FileUtil.loopFiles(transcodeFolder);
+        FFmpegUtil.mergeSegments(new ArrayList<>(Arrays.asList(transcodeResultsFolder.listFiles())), finalAudio);
         log.info("音频转码：合并分片完成，音频部分结束");
         return finalAudio;
     }
@@ -431,7 +449,7 @@ public class Master {
             HttpUtil.get(callbackUrl);
             log.info("callback结束");
         }
-        FileUtil.del(missionFolder);
+//        FileUtil.del(missionFolder);
     }
 
 }
