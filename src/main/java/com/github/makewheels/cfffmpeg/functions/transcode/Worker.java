@@ -1,4 +1,4 @@
-package com.github.makewheels.cfffmpeg.transcode;
+package com.github.makewheels.cfffmpeg.functions.transcode;
 
 import cn.hutool.core.util.RuntimeUtil;
 import com.alibaba.fastjson.JSONObject;

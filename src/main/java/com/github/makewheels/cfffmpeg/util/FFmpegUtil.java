@@ -3,11 +3,8 @@ package com.github.makewheels.cfffmpeg.util;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.file.FileNameUtil;
-import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RuntimeUtil;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -36,11 +33,11 @@ public class FFmpegUtil {
     /**
      * 按时长分割
      */
-    public static File splitByTime(File src, File destFolder, int segmentTime) {
+    public static File splitToSegments(File src, File destFolder, int segmentTimeLength) {
         FileUtil.mkdir(destFolder);
         File listFile = new File(destFolder, "pieces.list");
         run(ffmpeg + " -i " + src.getAbsolutePath() + " -c copy"
-                + " -f segment -segment_time " + segmentTime
+                + " -f segment -segment_time " + segmentTimeLength
                 + " -segment_list " + listFile.getAbsolutePath() + " "
                 + destFolder.getAbsolutePath() + "/piece-%04d." + FileNameUtil.extName(src));
         return listFile;

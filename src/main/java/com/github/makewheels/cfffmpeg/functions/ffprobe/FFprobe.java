@@ -1,4 +1,4 @@
-package com.github.makewheels.cfffmpeg.ffprobe;
+package com.github.makewheels.cfffmpeg.functions.ffprobe;
 
 import com.alibaba.fastjson.JSONObject;
 import com.github.makewheels.cfffmpeg.s3.S3Service;
