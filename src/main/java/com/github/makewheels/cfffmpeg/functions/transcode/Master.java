@@ -246,7 +246,7 @@ public class Master {
         uploader.setRunning(false);
         log.info("主线程：转码完毕，已将子线程停止");
         //子线程可能在正在上传和删除，遍历上传要先判断文件是否存在
-        File[] filesArray = destFolder.listFiles(file -> file.getName().endsWith(".ts"));
+        File[] filesArray = destFolder.listFiles();
         if (filesArray != null && filesArray.length != 0) {
             List<File> files = new ArrayList<>(Arrays.asList(filesArray));
             log.info("主线程：扫描文件结果，总数：" + files.size());
@@ -375,8 +375,7 @@ public class Master {
         log.info("视频转码：所有容器转码任务都完成了");
         log.info("视频转码：开始合并分片");
         File finalVideo = new File(transcodeFolder, "final/final." + ext);
-        List<File> files = new ArrayList<>(Arrays.asList(transcodeResultsFolder.listFiles()));
-        FFmpegUtil.mergeSegments(files, finalVideo);
+        FFmpegUtil.mergeSegments(FileUtil.loopFiles(transcodeResultsFolder), finalVideo);
         log.info("视频转码：合并分片完成，视频部分结束");
         return finalVideo;
     }
@@ -396,7 +395,7 @@ public class Master {
         File segmentsFolder = new File(transcodeFolder, "original-segments");
         File transcodeResultsFolder = new File(transcodeFolder, "transcode-segments");
         log.info("音频转码：开始分片");
-        FFmpegUtil.splitToSegments(extractAudio, segmentsFolder, 256);
+        FFmpegUtil.splitToSegments(extractAudio, segmentsFolder, 128);
 
         List<File> segments = FileUtil.loopFiles(segmentsFolder, file -> !file.getName().endsWith(".list"));
         int segmentAmount = segments.size();
@@ -434,8 +433,7 @@ public class Master {
         log.info("音频转码：所有容器转码任务都完成了");
         log.info("音频转码：开始合并分片");
         File finalAudio = new File(transcodeFolder, "final/final." + ext);
-        FileUtil.loopFiles(transcodeFolder);
-        FFmpegUtil.mergeSegments(new ArrayList<>(Arrays.asList(transcodeResultsFolder.listFiles())), finalAudio);
+        FFmpegUtil.mergeSegments(FileUtil.loopFiles(transcodeResultsFolder), finalAudio);
         log.info("音频转码：合并分片完成，音频部分结束");
         return finalAudio;
     }
