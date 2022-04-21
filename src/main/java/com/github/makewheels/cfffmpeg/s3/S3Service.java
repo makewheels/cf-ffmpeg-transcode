@@ -25,7 +25,7 @@ public class S3Service {
     /**
      * 给线上云函数调用初始化用
      */
-    public void init(String bucket, String region, String endpoint) {
+    public void init(String bucket, String endpoint) {
         if (client != null) return;
         this.bucket = bucket;
         String accessKeyId = System.getenv("s3_accessKeyId");

@@ -3,7 +3,6 @@ package com.github.makewheels.cfffmpeg.functions.transcode;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.io.file.FileNameUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.http.HttpUtil;
@@ -16,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
@@ -25,9 +23,10 @@ import java.util.concurrent.FutureTask;
 
 public class Master {
     private final S3Service s3Service = new S3Service();
+    private JSONObject body;
     private String videoId;
     private String transcodeId;
-    private String missionId;
+    private String jobId;
     private String inputKey;
     private String outputDir;
     private int width;
@@ -61,12 +60,13 @@ public class Master {
      * 初始化
      */
     private void init(JSONObject body) {
-        s3Service.init(body.getString("bucket"), body.getString("region"), body.getString("endpoint"));
+        s3Service.init(body.getString("bucket"), body.getString("endpoint"));
+        this.body = body;
         inputKey = body.getString("inputKey");
         outputDir = body.getString("outputDir");
         videoId = body.getString("videoId");
         transcodeId = body.getString("transcodeId");
-        missionId = body.getString("missionId");
+        jobId = body.getString("jobId");
         width = body.getInteger("width");
         height = body.getInteger("height");
         videoCodec = body.getString("videoCodec");
@@ -74,7 +74,7 @@ public class Master {
         quality = body.getString("quality");
         callbackUrl = body.getString("callbackUrl");
 
-        PathUtil.initMissionFolder(missionId);
+        PathUtil.initMissionFolder(jobId);
         missionFolder = PathUtil.getMissionFolder();
 
         ext = "mp4";
@@ -90,6 +90,9 @@ public class Master {
      * @return
      */
     private boolean isNeedChangeVideoResolution(JSONObject meta) {
+        if (body.getString("resolution").equals("keep")) {
+            return false;
+        }
         JSONObject videoSteam = FFprobeUtil.getVideoSteam(meta);
         return videoSteam.getInteger("width") * videoSteam.getInteger("height") > (width * height);
     }
@@ -444,7 +447,9 @@ public class Master {
     private void onFinish() {
         if (callbackUrl != null) {
             log.info("callback开始");
-            HttpUtil.get(callbackUrl);
+            JSONObject request = new JSONObject();
+            request.put("jobId", jobId);
+            HttpUtil.post(callbackUrl, request.toJSONString());
             log.info("callback结束");
         }
 //        FileUtil.del(missionFolder);
