@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class GpuController {
     @RequestMapping("/")
     public String hello() {
-        return "this is gpu controller" + IdUtil.simpleUUID();
+        return "this is gpu controller " + IdUtil.simpleUUID();
     }
 }
