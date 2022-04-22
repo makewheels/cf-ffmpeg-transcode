@@ -94,7 +94,7 @@ public class Master {
             return false;
         }
         JSONObject videoSteam = FFprobeUtil.getVideoSteam(meta);
-        return videoSteam.getInteger("width") * videoSteam.getInteger("height") > (width * height);
+        return videoSteam.getInteger("width") * videoSteam.getInteger("height") > width * height;
     }
 
     /**
