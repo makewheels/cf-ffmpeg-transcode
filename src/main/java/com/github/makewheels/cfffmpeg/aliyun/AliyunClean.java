@@ -6,18 +6,23 @@ import com.aliyun.fc.runtime.Context;
 import com.aliyun.fc.runtime.StreamRequestHandler;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.TimeZone;
 
 public class AliyunClean implements StreamRequestHandler {
 
     @Override
-    public void handleRequest(InputStream input, OutputStream output, Context context) throws IOException {
+    public void handleRequest(InputStream input, OutputStream output, Context context) {
         TimeZone.setDefault(TimeZone.getTimeZone("Asia/Shanghai"));
-        boolean deleteResult = FileUtil.del(new File(System.getenv("nas_dir"), "video-transcode"));
-        System.out.println("deleteResult = " + deleteResult);
-        IoUtil.writeUtf8(output, true, deleteResult);
+        File videoTranscodeFolder = new File(System.getenv("nas_dir"), "video-transcode");
+        List<File> files = FileUtil.loopFiles(videoTranscodeFolder);
+        System.out.println("总数：" + files.size());
+        for (File file : files) {
+            String path = file.getAbsolutePath();
+            System.out.println(file.delete() + " " + path);
+        }
+        IoUtil.writeUtf8(output, true, files.size());
     }
 }
