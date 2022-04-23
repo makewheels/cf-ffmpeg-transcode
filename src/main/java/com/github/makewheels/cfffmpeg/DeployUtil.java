@@ -61,6 +61,10 @@ public class DeployUtil {
                 "video-transcode", "ffprobe", request,
                 new UpdateFunctionHeaders(), new RuntimeOptions())));
 
+        System.out.println(JSON.toJSONString(client.updateFunctionWithOptions(
+                "video-transcode", "clean", request,
+                new UpdateFunctionHeaders(), new RuntimeOptions())));
+
         service.deleteObject(object);
     }
 }
