@@ -452,7 +452,7 @@ public class Master {
             HttpUtil.post(callbackUrl, request.toJSONString());
             log.info("callback结束");
         }
-//        FileUtil.del(missionFolder);
+        FileUtil.del(missionFolder);
     }
 
 }
