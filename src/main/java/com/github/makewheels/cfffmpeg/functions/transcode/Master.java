@@ -125,8 +125,7 @@ public class Master {
      * @return
      */
     private boolean isNeedChangeAudioCodec(JSONObject meta) {
-        JSONObject videoSteam = FFprobeUtil.getVideoSteam(meta);
-        log.info("videoSteam.getString(\"codec_name\") = " + videoSteam.getString("codec_name"));
+        JSONObject videoSteam = FFprobeUtil.getAudioSteam(meta);
         return !videoSteam.getString("codec_name").equals(audioCodec);
     }
 
